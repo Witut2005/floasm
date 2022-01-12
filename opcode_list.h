@@ -35,4 +35,9 @@ std::pair<uint8_t, std::string> one_segment_opcode[0x10] =
 };
 
 
-uint8_t two_segment_opcode[0x10] = {0x8b};
+enum two_segment_opcode
+{
+    mov = 0x8b,
+    add = 0x3,
+    sub = 0x2b
+};

@@ -1,21 +1,13 @@
-$ax++
-$cx++
-$dx++
-$bx++
-$sp++
-$bp++
-$si++
-$di++
 
-$ax--
-$dx--
-$cx--
-$bx--
-$sp--
-$bp--
-$si--
+BEGIN
+
+$ax = $cx
+$dx += $bx
+$sp -= $bp
+
+$si++
 $di--
 
+db 10
 
-$bp = $dx
-$ax = $cx
+END
