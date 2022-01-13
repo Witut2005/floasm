@@ -19,12 +19,58 @@
 
 std::fstream file;
 std::fstream output_file;
-char opcode[20];
+char opcode[50];
 uint32_t line_number = 0;
+
+#define TAB 0x9
+#define SPACE 0x20
+
+uint32_t string_to_decimal(char* str)
+{
+    uint32_t tmp = 0;
+    uint32_t ctr = 1;
+
+    for(int i = strlen(str)-1; i >= 0; i--, ctr *= 10)
+    {
+        if(str[i] >= '0' && str[i] <= '9')
+            tmp += (str[i] - 48) * ctr;
+    }
+
+
+    return tmp;
+}
+
+uint64_t string_to_hex(char* str)
+{
+    uint64_t tmp = 0;
+    uint64_t ctr = 1;
+
+
+
+    for(int i = strlen(str)-1; i >= 0; i--, ctr *= 0x10)
+    {
+
+        if((str[i] >= '0' && str[i] <= '9') || (str[i] >= 'a' && str[i] <= 'f'))
+            tmp += hex_values[str[i]] * ctr;
+
+        else 
+            return tmp;
+
+    }
+
+
+    return tmp;
+}
 
 
 void compile()
 {
+    {
+        char* x = std::find(opcode, opcode + 50,'\0');
+
+        if(*(x-1) == ':')
+            return;
+    }
 
     if(strstr(opcode,"END"))
     {
@@ -33,16 +79,19 @@ void compile()
         exit(0);        
     }
 
+
+
     else if(strstr(opcode,"BEGIN"))
         return;
 
+    else if(opcode[0] == ';')
+        return;
 
 
     for(int i = 0; i < 0x10;i++)
     {
         if(strcmp(one_segment_opcode[i].second.c_str(),opcode) == 0)
         {
-            //std::cout << one_segment_opcode[i].second << std::endl;      
             output_file << one_segment_opcode[i].first;
             return;
         }
@@ -81,9 +130,7 @@ void compile()
 
             return;
  
-
         }
-    
     } 
 
     if(strstr(opcode, "-=") != nullptr)
@@ -121,13 +168,85 @@ void compile()
     
     } 
 
-    else if(strstr(opcode,"db"))
+
+
+
+    else if(strstr(opcode,"db "))
     {
-        uint8_t tmp = atoi(opcode);
-        std::cout << opcode << std::endl;
-        std::cout <<  atoi(opcode) << std::endl;
+
+        uint8_t tmp;
+
+        if(strstr(opcode,"0x") != nullptr)
+        {
+            tmp = string_to_hex(opcode);
+            printf("%x\n",tmp);
+            output_file << (uint8_t)tmp;
+            return;
+        }
+
+        tmp = string_to_decimal(opcode);
+        
+        printf("%x\n",tmp);
+
         output_file << (uint8_t)tmp;
     }
+
+    else if(strncmp(opcode,"dw ",3) == 0)
+    {
+
+        uint16_t tmp;
+
+        if(strstr(opcode,"0x") != nullptr)
+        {
+            tmp = string_to_hex(opcode);
+            printf("%x\n",tmp);
+            output_file << (uint8_t)tmp;
+            return;
+        }
+
+        tmp = string_to_decimal(opcode);
+        
+        printf("%x\n",tmp);
+
+        output_file << (uint16_t)tmp;
+    }
+
+    else if(strncmp(opcode,"dd ",3) == 0)
+    {
+
+
+        uint32_t tmp;
+
+        if(strstr(opcode,"0x") != nullptr)
+        {
+            tmp = string_to_hex(opcode);
+            printf("%x\n",tmp);
+            output_file.write((char*)&tmp, sizeof(tmp));
+            return;
+        }
+
+
+    }
+
+
+    else if(strncmp(opcode,"dq ",3) == 0)
+    {
+
+
+        uint64_t tmp;
+
+        if(strstr(opcode,"0x") != nullptr)
+        {
+            tmp = string_to_hex(opcode);
+            printf("%lx\n",tmp);
+            output_file.write((char*)&tmp, sizeof(tmp));
+            return;
+        }
+
+
+    }
+
+
 
     else if(std::count(opcode,opcode + 10,'=') == 1)
     {
@@ -208,7 +327,15 @@ int main(int argc, char **argv)
 
     while(file.getline(opcode,sizeof(opcode)))
     {
-        opcode[19] = '\0';
+        opcode[49] = '\0';
+        
+        while(opcode[0] == SPACE || opcode[0] == TAB)
+        {
+            for(int i = 0; i < 49; i++)
+                opcode[i] = opcode[i+1];
+        }
+
+
         line_number++;
         compile();
     }
