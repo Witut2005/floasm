@@ -39,5 +39,6 @@ enum two_segment_opcode
 {
     mov = 0x8b,
     add = 0x3,
-    sub = 0x2b
+    sub = 0x2b,
+    jmp_far = 0xea
 };

@@ -81,3 +81,6 @@ std::map<char, uint8_t> hex_values =
     {'e',0xe},
     {'f',0xf}
 };
+
+
+std::map<std::string, uint64_t> label_map;

@@ -7,13 +7,10 @@ $sp -= $bp
 
 $si++
 $di--
-
-dd 0x11111111
+$ax++
 
 huj_piwo:
-    dq 0x1123456789abcdef
 
-
-
+jmp huj_piwo
 
 END

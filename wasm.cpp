@@ -16,6 +16,7 @@
 #include "./opcode_list.h"
 
 
+uint64_t opcode_counter = 0x0;
 
 std::fstream file;
 std::fstream output_file;
@@ -65,17 +66,40 @@ uint64_t string_to_hex(char* str)
 
 void compile()
 {
+
+    char arr[3];
+
     {
         char* x = std::find(opcode, opcode + 50,'\0');
 
         if(*(x-1) == ':')
+        {
+            *(x-1) = '\0';
+            std::string tmp(opcode);
+            label_map.insert({tmp,opcode_counter});
             return;
+        }
+    
+    
     }
 
+    for(int i = 0; i < 0x10;i++)
+    {
+        if(strcmp(one_segment_opcode[i].second.c_str(),opcode) == 0)
+        {
+            output_file << one_segment_opcode[i].first;
+            opcode_counter += 1;
+            return;
+        }
+    }
+
+ 
     if(strstr(opcode,"END"))
     {
         file.close();
         output_file.close();
+        std::cout << opcode_counter << std::endl;
+        
         exit(0);        
     }
 
@@ -87,20 +111,43 @@ void compile()
     else if(opcode[0] == ';')
         return;
 
-
-    for(int i = 0; i < 0x10;i++)
+    
+    else if(strncmp(opcode,"jmp",3) == 0)
     {
-        if(strcmp(one_segment_opcode[i].second.c_str(),opcode) == 0)
+
+        std::cout << "YOUR JUMP: ";
+        std::cout << opcode << std::endl;
+        output_file << (uint8_t)jmp_far;
+
+        uint64_t tmp_ctr = 0x0;
+
+        for(uint8_t i = 4; i < 50;i++, tmp_ctr++)
         {
-            output_file << one_segment_opcode[i].first;
-            return;
+            opcode[tmp_ctr] = opcode[i];
         }
+
+        opcode[49] = '\0';
+
+        std::string tmp(opcode);
+
+
+
+        std::cout << opcode << std::endl;
+
+        uint16_t tmp_opcode = label_map[tmp];
+
+
+        output_file.write((char*)&tmp_opcode,sizeof(uint16_t));
+        output_file.write("\0\0",sizeof(uint16_t));
+        return;
     }
+    
 
 
-    char arr[3];
 
-    if(strstr(opcode, "+=") != nullptr)
+
+
+    else if(strstr(opcode, "+=") != nullptr)
     {
         if(std::count(opcode,opcode + 10,'$') == 2)
         {
@@ -127,6 +174,8 @@ void compile()
             output_file << (uint8_t)0x3;
             op |= 0xC0;
             output_file << op;
+
+            opcode_counter += 2;
 
             return;
  
@@ -161,6 +210,8 @@ void compile()
             op |= 0xC0;
             output_file << op;
 
+            opcode_counter += 2;
+
             return;
  
 
@@ -189,6 +240,7 @@ void compile()
         printf("%x\n",tmp);
 
         output_file << (uint8_t)tmp;
+        opcode_counter += 1;
     }
 
     else if(strncmp(opcode,"dw ",3) == 0)
@@ -209,6 +261,7 @@ void compile()
         printf("%x\n",tmp);
 
         output_file << (uint16_t)tmp;
+        opcode_counter += 2;
     }
 
     else if(strncmp(opcode,"dd ",3) == 0)
@@ -222,7 +275,7 @@ void compile()
             tmp = string_to_hex(opcode);
             printf("%x\n",tmp);
             output_file.write((char*)&tmp, sizeof(tmp));
-            return;
+            opcode_counter += 4;
         }
 
 
@@ -240,7 +293,7 @@ void compile()
             tmp = string_to_hex(opcode);
             printf("%lx\n",tmp);
             output_file.write((char*)&tmp, sizeof(tmp));
-            return;
+            opcode_counter += 8;
         }
 
 
@@ -276,6 +329,8 @@ void compile()
             op |= 0xC0;
             output_file << op;
 
+            opcode_counter += 2;
+            
             return;
  
 
@@ -334,7 +389,6 @@ int main(int argc, char **argv)
             for(int i = 0; i < 49; i++)
                 opcode[i] = opcode[i+1];
         }
-
 
         line_number++;
         compile();
