@@ -9,8 +9,8 @@ $si++
 $di--
 $ax++
 
-huj_piwo:
+br00h_moment:
 
-jmp huj_piwo
+jmp br00h_moment
 
 END
